@@ -1,15 +1,16 @@
 - hosts: all
   
   roles:
-  - ansible-role-perfsonar-testpoint
   - ansible-role-perfsonar-installer
-  - ../ansible-role-pSSID
+  - ansible-role-perfsonar-testpoint
+  - ansible-role-pSSID
 
   tasks:
   - name: make the remote pSSID config dir if it doesn't exist
     file:
       path: /etc/pssid
       state: directory
+
   - name: generate pSSID config file on target
     template:
       src: ./pssid-conf.j2
