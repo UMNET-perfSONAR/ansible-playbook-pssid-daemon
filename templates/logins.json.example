@@ -1,0 +1,10 @@
+{
+  "eduroam": {
+    "user": "benton",
+    "password": "test password"
+  },
+  "MWireless": {
+    "user": "benton",
+    "password": "test password2"
+  }
+}

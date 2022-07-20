@@ -1,0 +1,150 @@
+- hosts: all
+  vars:
+    install_pscheduler_5: false
+  
+  roles:
+    - ansible-role-pssid
+
+  pre_tasks:
+
+    - name: install pscheduler 5.0
+      include_role:
+        name: ansible-role-pscheduler-5-ubuntu
+      when: install_pscheduler_5
+
+  ### Taken from
+  # https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/ifupdown_setup.yml
+  # and
+  # https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/dhcp_network.yml
+  ### in order to correctly set up networking configuration
+
+    - name: create dhclient hook script adds static route
+      file:
+        path: /etc/dhcp/dhclient-exit-hooks.d/add_static_routes
+        state: touch
+        mode: 0777
+
+    - name: add iface information for dhcp networking 
+      blockinfile:
+        path: /etc/dhcp/dhclient-exit-hooks.d/add_static_routes
+        insertafter: EOF
+        marker: ""
+        block: |
+          #!/bin/bash
+          if [ ${interface} = eth0 ]; then
+                  case $reason in BOUND|RENEW|REBIND|REBOOT)
+                          ip route add 141.211.160.28 via "${new_routers}" dev eth0 proto static
+                          ip route add 141.211.232.46 via "${new_routers}" dev eth0 proto static
+                  ;;
+                  esac
+          fi 
+    
+    
+    - name: Remove blank lines from blockinfile
+      lineinfile:
+        path: /etc/dhcp/dhclient-exit-hooks.d/add_static_routes
+        state: absent
+        regexp: '^$'
+
+
+    - name: update and install ifupdown
+      apt: 
+        name: ifupdown
+
+    - name: add iface information for dhcp networking 
+      blockinfile:
+        path: /etc/network/interfaces
+        insertafter: EOF
+        marker: ""
+        block: |
+          auto lo
+          iface lo inet loopback
+          allow-hotplug eth0
+          auto eth0
+          iface eth0 inet dhcp
+#          up python3 /usr/local/bin/pssid/rpi_meta.py
+
+# The next command will disconnect ssh and potentially change ip address
+#     - name: bring down and bring up eth0
+#           shell: 'ifdown --force eth0 lo && ifup -a'
+
+# Might need to be added, previous interns had a task to 
+# run ifup/ifdown, but that seemed to break the entire play.
+# My hope is the reboot modules won't break the play.
+#    - name: reboot machine so iface settings take effect
+#      ansible.module.reboot:
+
+    - name: disable systemd-networkd.socket 
+      systemd:
+        name: systemd-networkd.socket
+        state: stopped
+        enabled: no
+        masked: yes
+
+
+    - name: disable systemd-networkd 
+      systemd:
+        name: systemd-networkd
+        state: stopped
+        enabled: no
+        masked: yes
+
+
+    - name: disable networkd-dispatcher 
+      systemd:
+        name: networkd-dispatcher
+        state: stopped
+        enabled: no
+        masked: yes
+
+
+    - name: disable systemd-networkd-wait-online
+      systemd:
+        name: systemd-networkd-wait-online
+        state: stopped
+        enabled: no
+        masked: yes
+
+
+    - name: bring up wireless interface
+      command: ip link set wlan0 up
+
+
+    - name: ensure localhost in in hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.0\.1'
+        line: '127.0.0.1 localhost ubuntu'
+        insertbefore: BOF
+
+    - name: set dhclient connection timeout
+      lineinfile:
+        path: /etc/dhcp/dhclient.conf
+        regexp: '^timeout'
+        line: 'timeout 45;'
+
+### End of stuff taken from ansible-inventory-pssid-ilab ###
+
+    # get DNS working
+    - name: put 8.8.8.8 in resolv.conf
+      lineinfile:
+        path: /etc/resolv.conf
+        line: nameserver 8.8.8.8
+
+    - name: create systemd service to bring up wireless interface on boot
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/bring-up-wireless.service
+        content: |
+          [Unit]
+          Description=Brgin up wlan0 on boot
+          
+          [Service]
+          ExecStart=-/sbin/ip link set wlan0 up
+          
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: enable aforementioned systemd service
+      ansible.builtin.systemd:
+        name: bring-up-wireless.service
+        enabled: true

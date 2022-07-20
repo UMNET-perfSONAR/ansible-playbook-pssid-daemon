@@ -1,0 +1,15 @@
+- hosts: all
+  vars:
+    pssid_config_destination: /etc/pssid/config.json  
+    pssid_config_template: ../templates/config.json.j2
+
+  tasks:
+  - name: make the remote pSSID config dir if it doesn't exist
+    file:
+      path: "{{ pssid_config_destination | dirname }}"
+      state: directory
+
+  - name: generate pSSID config file on target
+    template:
+      src: "{{ pssid_config_template }}"
+      dest: "{{ pssid_config_destination }}"
