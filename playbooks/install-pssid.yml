@@ -12,11 +12,11 @@
         name: ansible-role-pscheduler-5-ubuntu
       when: install_pscheduler_5
 
-  ### Taken from
-  # https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/ifupdown_setup.yml
-  # and
-  # https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/dhcp_network.yml
-  ### in order to correctly set up networking configuration
+### Taken from
+# https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/ifupdown_setup.yml
+# and
+# https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/dhcp_network.yml
+### in order to correctly set up networking configuration
 
     - name: create dhclient hook script adds static route
       file:
@@ -39,13 +39,11 @@
                   esac
           fi 
     
-    
     - name: Remove blank lines from blockinfile
       lineinfile:
         path: /etc/dhcp/dhclient-exit-hooks.d/add_static_routes
         state: absent
         regexp: '^$'
-
 
     - name: update and install ifupdown
       apt: 
@@ -64,23 +62,12 @@
           iface eth0 inet dhcp
 #          up python3 /usr/local/bin/pssid/rpi_meta.py
 
-# The next command will disconnect ssh and potentially change ip address
-#     - name: bring down and bring up eth0
-#           shell: 'ifdown --force eth0 lo && ifup -a'
-
-# Might need to be added, previous interns had a task to 
-# run ifup/ifdown, but that seemed to break the entire play.
-# My hope is the reboot modules won't break the play.
-#    - name: reboot machine so iface settings take effect
-#      ansible.module.reboot:
-
     - name: disable systemd-networkd.socket 
       systemd:
         name: systemd-networkd.socket
         state: stopped
         enabled: no
         masked: yes
-
 
     - name: disable systemd-networkd 
       systemd:
@@ -89,14 +76,12 @@
         enabled: no
         masked: yes
 
-
     - name: disable networkd-dispatcher 
       systemd:
         name: networkd-dispatcher
         state: stopped
         enabled: no
         masked: yes
-
 
     - name: disable systemd-networkd-wait-online
       systemd:
@@ -105,10 +90,8 @@
         enabled: no
         masked: yes
 
-
     - name: bring up wireless interface
       command: ip link set wlan0 up
-
 
     - name: ensure localhost in in hosts file
       lineinfile:
@@ -125,7 +108,6 @@
 
 ### End of stuff taken from ansible-inventory-pssid-ilab ###
 
-    # get DNS working
     - name: put 8.8.8.8 in resolv.conf
       lineinfile:
         path: /etc/resolv.conf
