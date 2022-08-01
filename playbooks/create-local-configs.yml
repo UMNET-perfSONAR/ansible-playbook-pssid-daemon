@@ -1,0 +1,18 @@
+- hosts: all
+  gather_facts: false
+  become: false
+  vars:
+    pssid_config_template: ../templates/config.json.j2
+    pssid_config_destination: "{{ inventory_dir | dirname }}/configs/pssid-gui.{{ inventory_hostname }}.conf"
+
+  tasks:
+  - name: "create destination directory {{ pssid_config_destination | dirname }}"
+    ansible.builtin.file:
+      path: "{{ pssid_config_destination | dirname }}"
+      state: directory
+    delegate_to: localhost
+  - name: "generate pSSID config file locally at {{ pssid_config_destination }}"
+    ansible.builtin.template:
+      src: "{{ pssid_config_template }}"
+      dest: "{{ pssid_config_destination }}"
+    delegate_to: localhost
