@@ -1,3 +1,6 @@
+# modified version of:
+# https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-ilab/blob/a41368b8f39836bbeb1e75f062a8fbf2ad2a52a7/playbooks/extract_identifiers.yml
+
 - hosts: all
   vars:
     serial_directory: "{{ inventory_dir | dirname }}/serial/{{ inventory_hostname }}"
