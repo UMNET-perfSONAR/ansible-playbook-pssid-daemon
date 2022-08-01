@@ -1,0 +1,35 @@
+- hosts: all
+  vars:
+    serial_directory: "{{ inventory_dir | dirname }}/serial/{{ inventory_hostname }}"
+  tasks:
+    
+    - name: Serial Number 
+      shell: 'cat /proc/cpuinfo | grep ^Serial | cut -d" " -f2' 
+      register: serial_number
+
+    - name: hardware Number 
+      shell: 'cat /proc/cpuinfo | grep ^Hardware | cut -d" " -f2' 
+      register: hardware_number
+    
+    - name: copy identifiers info to a local file
+      blockinfile:
+        block: |
+          serial_number: "{{ serial_number.stdout }}"
+          hardware_number: "{{ hardware_number.stdout }}"
+          eth0.macaddress: "{{ ansible_eth0.macaddress }}"
+          wlan0.macaddress: "{{ ansible_wlan0.macaddress }}"
+        path: "{{ serial_directory }}/hardware_info"
+        create: yes
+      connection: local
+      become: no
+      delegate_to: localhost
+
+    - name: copy meta info to a local file
+      blockinfile:
+        block: |
+          meta_information: {{ meta | to_nice_json(indent=2) }}
+        path: "{{ serial_directory }}/meta_info"
+        create: yes
+      connection: local
+      become: no
+      delegate_to: localhost

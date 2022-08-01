@@ -55,3 +55,11 @@ ansible-playbook playbooks/create-local-configs.yml -i /path/to/pssid-gui-invent
 ```
 
 The configs will be saved within `/path/to/pssid-gui-inventories/inv-name/configs` locally.
+
+### Pull Identifiers From Probes
+
+```
+ansible-playbook playbooks/pull-identifiers.yml -i /path/to/pssid-gui-inventories/inv-name/inventory --ask-becom-pass
+```
+
+The identifiers (e.g. MAC address) are saved within `/path/to/pssid-gui-inventories/inv-name/serial` locally.
