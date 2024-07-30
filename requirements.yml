@@ -1,0 +1,14 @@
+# requirements.yml file for /roles to populate using ansible (a playbook in playbook)
+---
+- name: ansible-role-pssid-daemon
+  src: https://github.com/UMNET-perfSONAR/ansible-role-pssid-daemon.git
+  
+- name: ansible-role-pssid-VT-tools
+  src: https://github.com/UMNET-perfSONAR/ansible-role-pssid-VT-tools.git
+  version: main 
+
+
+# - name: ansible-role-perfsonar-testpoint
+#   src: https://github.com/username/ansible-role-perfsonar-testpoint
+
+  

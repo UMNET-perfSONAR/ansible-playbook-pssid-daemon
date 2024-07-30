@@ -1,0 +1,7 @@
+---
+- name: provisioning probes
+  hosts: all
+  roles:
+    - ansible-role-pssid-VT-tools
+    - ansible-role-pssid-daemon
+
