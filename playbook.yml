@@ -1,12 +1,13 @@
 ---
-- name: Ensure the apt cache is up to date
-  ansible.builtin.apt:
-    update_cache: yes
-  become: yes
-
 - name: provisioning probes
   hosts: all
+  tasks:
+  - name: Update apt-get repo and cache
+    apt:
+      update_cache: yes
+      force_apt_get: yes
+      cache_valid_time: 3600
   roles:
     - ansible-role-pssid-VT-tools
     - ansible-role-pssid-daemon
-
+  
