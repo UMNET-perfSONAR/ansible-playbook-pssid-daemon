@@ -45,6 +45,8 @@ vi vault_pass.txt
 
 
 # Usage
+To manually provision probes. Use root to clone repos if it requres permission on /var/lib/pssid path. 
+
 #### Clone the inventory example
 Clone ansible-inventory-pssid-probes-example repository 
 ```bash
@@ -52,8 +54,15 @@ cd /var/lib/pssid
 git clone https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-probes-example.git
 ```
 
-#### Run default.sh  # check if run?
-Assuming the inventory file structure has been created and bootstrap performed, user needs to run the defualt.sh to ensure variable or files are copy to inventory properly. Modify roles' variables in inventory since playbook's roles should be immutable.
+#### Clone the playbook
+```bash
+cd /var/lib/pssid
+git clone https://github.com/UMNET-perfSONAR/ansible-playbook-pssid-daemon.git
+ansible-galaxy install -r requirements.yml --roles-path roles
+```
+
+#### Run default.sh
+Assuming provisioning and bootstrap have been performed, user needs to run the defualt.sh to ensure variable or files are copy to inventory properly. Modify roles' variables in inventory if necessary since playbook's roles should be immutable.
 ```bash
 cd /var/lib/pssid/playbooks/ansible-playbook-pssid-daemon
 chmod +x defaults.sh
@@ -63,8 +72,21 @@ chmod +x defaults.sh
 sudo ./defaults.sh /var/lib/pssid ansible-inventory-pssid-probes-example/
 ``` 
 
+#### Change permission
+Locate the parent folder for playbook and inventory
+``` bash
+chmod 755 -R * /var/lib/pssid
+cd /var/lib/pssid/playbooks/ansible-playbook-pssid-daemon
+chmod 644 vault_pass.txt
+```
+
 #### How to run the ansible script. 
 `--vault-password-file` is optional depending on whether wpa_supplicant_profiles.yml is encrypted or not. 
+
+Run the playbook as a normal user instead of root.
+```bash
+cd /var/lib/pssid/playbooks/ansible-playbook-pssid-daemon
+```
 
 #### Inline inventory
 Run the Ansible script with decryption file. Note: '-i "198.111.226.182,"' specifies an inline inventory with a single host.
