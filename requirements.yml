@@ -7,7 +7,7 @@
   src: https://github.com/UMNET-perfSONAR/ansible-role-pssid-VT-tools.git
   version: main 
 
-- name: ansible-playbook-filebeat
-  src: https://github.com/UMNET-perfSONAR/ansible-playbook-filebeat.git
+- name: ansible-role-filebeat
+  src: https://github.com/UMNET-perfSONAR/ansible-role-filebeat.git
 
   
