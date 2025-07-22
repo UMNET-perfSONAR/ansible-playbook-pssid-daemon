@@ -10,5 +10,5 @@
   roles:
     - ansible-role-pssid-VT-tools
     - ansible-role-pssid-daemon
-    - ansible-playbook-filebeat
+    - ansible-role-filebeat
   
