@@ -22,6 +22,7 @@ fi
 mkdir -p $directory/group_vars
 mkdir -p $directory/host_vars
 mkdir -p $directory/files
+mkdir -p "$directory/group_vars/all"
 
 # copy the source file to the destination directory and rename it
 cp "/var/lib/pssid/output/hosts.ini" "$directory/group_vars/hosts"
@@ -43,4 +44,9 @@ fi
 if ! [ -f $directory/group_vars/wpa_supplicant_profiles.yml ]; then
     cp roles/ansible-role-pssid-VT-tools/defaults/wpa_supplicant_profiles.yml \
        ${directory}/group_vars/wpa_supplicant_profiles.yml
+fi
+
+if ! [ -f $directory/group_vars/all/install_filebeat.yml ]; then
+  cp roles/ansible-role-filebeat/defaults/main.yml \
+    $directory/group_vars/all/install_filebeat.yml
 fi
