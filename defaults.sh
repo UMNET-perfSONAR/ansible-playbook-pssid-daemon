@@ -31,19 +31,19 @@ cp "/var/lib/pssid/output/hosts.ini" "$directory/group_vars/hosts"
 cp "/var/lib/pssid/output/pssid_config.json" "$directory/files/pssid_config.json"
 
 # copy the default group variable files to the group_vars directory
-if ! [ -f $directory/group_vars/ansible-role-pssid-daemon.yml ]; then
+if ! [ -f $directory/group_vars/all/ansible-role-pssid-daemon.yml ]; then
     cp roles/ansible-role-pssid-daemon/defaults/main.yml \
-       ${directory}/group_vars/ansible-role-pssid-daemon.yml
+       ${directory}/group_vars/all/ansible-role-pssid-daemon.yml
 fi
 
-if ! [ -f $directory/group_vars/ansible-role-pssid-VT-tools.yml ]; then
+if ! [ -f $directory/group_vars/all/ansible-role-pssid-VT-tools.yml ]; then
     cp roles/ansible-role-pssid-VT-tools/defaults/main.yml \
-       ${directory}/group_vars/ansible-role-pssid-VT-tools.yml
+       ${directory}/group_vars/all/ansible-role-pssid-VT-tools.yml
 fi
 
-if ! [ -f $directory/group_vars/wpa_supplicant_profiles.yml ]; then
+if ! [ -f $directory/group_vars/all/wpa_supplicant_profiles.yml ]; then
     cp roles/ansible-role-pssid-VT-tools/defaults/wpa_supplicant_profiles.yml \
-       ${directory}/group_vars/wpa_supplicant_profiles.yml
+       ${directory}/group_vars/all/wpa_supplicant_profiles.yml
 fi
 
 if ! [ -f $directory/group_vars/all/install_filebeat.yml ]; then
