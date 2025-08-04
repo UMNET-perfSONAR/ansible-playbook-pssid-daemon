@@ -7,6 +7,10 @@
         update_cache: yes
         force_apt_get: yes
         cache_valid_time: 3600
+    - name: Ensure defaults.sh is executable
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/defaults.sh"
+        mode: 'u+x'
   roles:
     - ansible-role-pssid-VT-tools
     - ansible-role-pssid-daemon
