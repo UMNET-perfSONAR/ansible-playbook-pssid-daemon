@@ -1,22 +1,26 @@
 # ansible-playbook-pssid-daemon
-install and configure pSSID daemon on probes
+This repository installs and configures the pSSID daemon on probes.
 
-make sure  sudo apt-get update  
+Make sure the Ansible controller has an up-to-date package cache by running:
+
+`sudo apt-get update`
 
 
-## File structure
-User needs to create inventory file structure on the GUI server before performing provisioning.
+# Usage
+Before running this playbook, the GUI server should already be deployed and the target probes should already be added through it. This should generate the required Ansible input files, such as (`hosts.ini` and `pssid_config.json`), under `/var/lib/pssid/output/` on the host machine.
+
+## Expected final file structure
+
 ```bash
 /var/lib/pssid/
-    ├──ansible-inventory-pssid-probes-example
-    ├──ansible_inventory/ # user defined folder name
-        ├──inventory/
-           ├──group_vars/
-           ├──host_vars/
-           ├──host.ini
-           ├──README.md    
-           ├──files/       # site specific files, if any
-           ├──playbooks/   # site specific playbook
+    ├──ansible-inventory-pssid-probes-example/
+      ├──inventory/
+          ├──group_vars/
+             ├──all/
+          ├──host_vars/
+          ├──README.md    
+      ├──files/
+      ├──playbook/
         
 /usr/lib/pssid/playbooks
     ├──ansible-playbook-pssid-daemon
@@ -29,12 +33,10 @@ User needs to create inventory file structure on the GUI server before performin
     ├──ansible-playbook-bootstrap  
 ```
 
+## Create Directories
+To manually provision probes. Use root or sudo to finish the following processes if it requires permission.
 
-# Usage
-To manually provision probes. Use root to finish the following processes if it requres permission.
-
-#### Clone the inventory example
-Clone ansible-inventory-pssid-probes-example repository 
+#### Clone the sample inventory
 ```bash
 cd /var/lib/pssid
 git clone https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-probes-example.git
@@ -48,70 +50,127 @@ cd ansible-playbook-pssid-daemon/
 ansible-galaxy install -r requirements.yml --roles-path roles
 ```
 
-#### Run default.sh
-Assuming provisioning and bootstrap have been performed, user needs to run the defualt.sh to ensure variable or files are copy to inventory properly. Modify roles' variables in inventory if necessary since playbook's roles should be immutable.
+#### Run defaults.sh
+The script expects generated files to exist under `/var/lib/pssid/output/`, including:
+
+`/var/lib/pssid/output/hosts.ini`
+`/var/lib/pssid/output/pssid_config.json`
+
+Run `defaults.sh` from the playbook directory and pass the inventory example root as the argument:
+
 ```bash
 cd /usr/lib/pssid/playbooks/ansible-playbook-pssid-daemon
 chmod +x defaults.sh
-```
-
-```bash
 ./defaults.sh /var/lib/pssid/ansible-inventory-pssid-probes-example/
-``` 
-
-# Encrpyt wap_supplicant.conf file
-`ansible-role-pssid-VT-tools` contains `wpa_supplicant_profiles.yml` which is encrypted using Ansible vault as an example. User defines the wpa_supplicant_profiles.yml. This file will be copied to inventory's group_vars folder where user can re-define variables after running the `default.sh`. 
-`Encryption`
-User will be prompted to set up encryption password.
-```bash
-ansible-vault encrypt wpa_supplicant_profiles.yml
 ```
 
-`Decryption file`
-Create a local vault_pass.txt at `/var/lib/pssid/playbooks/ansible-playbook-pssid-daemon` with user defined password. This file should be provided when running Ansible provisioning script. 
+This creates or updates the Ansible inventory directory and copies necessary files to locations in the inventory. See `defaults.sh` for more.
+
+# Setup and encrypt wpa_supplicant profiles
+
+The `ansible-role-pssid-VT-tools` role includes a template for generating `wpa_supplicant` configuration files under `/usr/lib/pssid/playbooks/ansible-playbook-pssid-daemon/roles/ansible-role-pssid-VT-tools/templates`. 
+
+Create your specific `wpa_supplicant_profiles.yml` file under the inventory's `group_vars/all/` directory:
 ```bash
-vi vault_pass.txt
+/var/lib/pssid/ansible-inventory-pssid-probes-example/inventory/group_vars/all/wpa_supplicant_profiles.yml
 ```
 
-#### Change permission
-Locate the parent folder for playbook and inventory
-``` bash
+The `wpa_supplicant_profiles.yml` file should follow the structure below:
+
+```yml
+wpa_supplicant_profiles:
+  global_settings:
+    ctrl_interface: "example-interface"
+
+  networks:
+    - ssid: "example-ssid"
+      key_mgmt: example-key
+      eap: example-eap
+      proto: example-rsn
+      pairwise: example-pairwise
+      group: example-group
+      phase2: "example-auth"
+      identity: "example-identity"
+      password: "example-password"
+```
+
+After creating `wpa_supplicant_profiles.yml`, create a local vault password file in the playbook repository:
+
+```bash
+cd /usr/lib/pssid/playbooks/ansible-playbook-pssid-daemon
+vi .vault_pass.txt
+```
+
+Add the shared Ansible Vault password to `.vault_pass.txt`. Do not commit this file to Git.
+
+Then encrypt the inventory copy of `wpa_supplicant_profiles.yml` using the shared vault password:
+
+```
+ansible-vault encrypt \
+  /var/lib/pssid/ansible-inventory-pssid-probes-example/inventory/group_vars/all/wpa_supplicant_profiles.yml \
+  --vault-password-file /usr/lib/pssid/playbooks/ansible-playbook-pssid-daemon/.vault_pass.txt
+```
+
+#### Change permissions
+Ensure the user running Ansible can access the inventory and playbook parent directories and the vault password file:
+
+```bash
 chmod 755 -R * /var/lib/pssid/
 chmod 755 -R * /usr/lib/pssid/
+
 cd /var/lib/pssid/playbooks/ansible-playbook-pssid-daemon
-chmod 644 vault_pass.txt
+chmod 644 .vault_pass.txt
 ```
 
-#### How to run the ansible script. 
-`--vault-password-file` is optional depending on whether wpa_supplicant_profiles.yml is encrypted or not. 
+#### How to run the Ansible playbook
 
-Run the playbook as user instead of root.
+The playbook should be run from the playbook repository:
+
 ```bash
 cd /usr/lib/pssid/playbooks/ansible-playbook-pssid-daemon
 ```
 
+Run the playbook as a user with SSH access to the probes. Use privilege escalation to become root on the probes.
+
+The `--vault-password-file` option is required if any inventory files, such as `wpa_supplicant_profiles.yml`, are encrypted with Ansible Vault.
+
 #### Inline inventory
 Run the Ansible script with decryption file. Note: '-i "198.111.226.182,"' specifies an inline inventory with a single host.
-
-```bash
+```
 ansible-playbook \
   -i "198.111.226.182," \
   --become \
   --become-method su \
   --become-user root \
   --ask-become-pass \
-  --vault-password-file ./vault_pass.txt \
+  --vault-password-file ./.vault_pass.txt \
   playbook.yml
 ```
 
-#### External inventory
-``` bash
+If SSH password authentication is required, add --ask-pass:
+```bash
 ansible-playbook \
-  --inventory /var/lib/pssid/ansible-inventory-pssid-probes-example/inventory/ \
+  -i "198.111.226.182," \
+  --ask-pass \
   --become \
   --become-method su \
   --become-user root \
   --ask-become-pass \
-  --vault-password-file ./vault_pass.txt \
+  --vault-password-file ./.vault_pass.txt \
+  playbook.yml
+```
+
+
+#### External inventory
+
+Use the inventory directory created by `defaults.sh`:
+```bash
+ansible-playbook \
+  --inventory /var/lib/pssid/ansible-inventory-pssid-probes-example/inventory \
+  --become \
+  --become-method su \
+  --become-user root \
+  --ask-become-pass \
+  --vault-password-file ./.vault_pass.txt \
   playbook.yml
 ```
